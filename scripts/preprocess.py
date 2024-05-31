@@ -26,3 +26,6 @@ class Preprocessing:
         output_filename = filename.replace('.csv', '_imputed.csv')
         df.to_csv(f"../data/preprocessed/{output_filename}", index=False)
         print(f"Imputed data saved as '{output_filename}'.")
+    
+    def drop_unnamed_cols(data):
+        data.loc[:, ~data.columns.str.contains('^Unnamed')]

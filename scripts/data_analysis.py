@@ -1,3 +1,4 @@
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -46,6 +47,33 @@ class DataAnalysis:
     def describe_missingness(df):
         missing_data = df.columns[df.isnull().any()]
         return df[missing_data].describe()
+    
+    @staticmethod
+    def plot_distribution(df, columns):
+        """
+        Plots the distribution of specified columns.
+
+        :param df: pandas DataFrame containing the filtered data.
+        :param columns: list of column names to plot.
+        """
+        num_cols = len(columns)
+        num_rows = math.ceil(num_cols / 3)
+        fig, axes = plt.subplots(num_rows, 3, figsize=(15, 5 * num_rows))
+        
+        for i, col in enumerate(columns):
+            row, col_pos = divmod(i, 3)
+            ax = axes[row, col_pos] if num_rows > 1 else axes[col_pos]
+            
+            if df[col].dtype in ['int64', 'float64']:
+                df[col].plot(kind='hist', bins=30, ax=ax, title=col)
+            else:
+                df[col].value_counts().plot(kind='bar', ax=ax, title=col)
+            
+            ax.set_xlabel(col)
+            ax.set_ylabel('Frequency')
+
+        plt.tight_layout()
+        plt.show()
         
     @staticmethod
     def plot_missing_data_distribution(df):
@@ -84,11 +112,13 @@ class DataAnalysis:
         df_filtered = df[columns]
         corr_matrix = df_filtered.corr()
 
-        plt.figure(figsize=(30, 30))
-        sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm", square=True)
-        plt.title(f"Correlation Matrix of {title}", fontsize=30)
+        plt.figure(figsize=(10, 10))
+        sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm", square=True,
+                annot_kws={"size": 14}, cbar_kws={"shrink": 0.8})
+        plt.title(f"Correlation Matrix of {title}", fontsize=20, pad=10)
         plt.xticks(rotation=45, ha='right', fontsize=14)
         plt.yticks(rotation=0, fontsize=14)
+        plt.subplots_adjust(top=0.9)
         plt.tight_layout()
         plt.show()
     
