@@ -12,13 +12,16 @@ class DataAnalysis:
         sum_missing_values = df.isnull().sum()
         total_missing_values = sum_missing_values[sum_missing_values > 0]
 
-        plt.figure(figsize=(12, 6))
-        total_missing_values.plot(kind='bar')
-        plt.title('Columns with Missing Data')
-        plt.xlabel('Features')
-        plt.ylabel('Number of Missing Values')
-        plt.xticks(rotation=45, ha='right')
-        plt.show()
+        if total_missing_values > 0:
+            plt.figure(figsize=(12, 6))
+            total_missing_values.plot(kind='bar')
+            plt.title('Columns with Missing Data')
+            plt.xlabel('Features')
+            plt.ylabel('Number of Missing Values')
+            plt.xticks(rotation=45, ha='right')
+            plt.show()
+        else:
+            print('No missing values')
 
     @staticmethod
     def plot_missing_heatmap(df):
@@ -49,27 +52,31 @@ class DataAnalysis:
         return df[missing_data].describe()
     
     @staticmethod
-    def plot_distribution(df, columns):
+    def plot_distribution(df, columns, label_dict=None):
         """
         Plots the distribution of specified columns.
 
         :param df: pandas DataFrame containing the filtered data.
         :param columns: list of column names to plot.
+        :param label_dict: dictionary with original column names as keys and new titles as values.
         """
         num_cols = len(columns)
         num_rows = math.ceil(num_cols / 3)
-        fig, axes = plt.subplots(num_rows, 3, figsize=(15, 5 * num_rows))
+        if num_cols > 2:
+            fig, axes = plt.subplots(num_rows, 3, figsize=(15, 5 * num_rows))
+        else:
+            fig, axes = plt.subplots(1, num_cols, figsize=(10, 5))
         
         for i, col in enumerate(columns):
             row, col_pos = divmod(i, 3)
             ax = axes[row, col_pos] if num_rows > 1 else axes[col_pos]
             
             if df[col].dtype in ['int64', 'float64']:
-                df[col].plot(kind='hist', bins=30, ax=ax, title=col)
+                df[col].plot(kind='hist', bins=30, ax=ax, title=label_dict.get(col, col))
             else:
-                df[col].value_counts().plot(kind='bar', ax=ax, title=col)
+                df[col].value_counts().plot(kind='bar', ax=ax, title=label_dict.get(col, col))
             
-            ax.set_xlabel(col)
+            ax.set_xlabel(label_dict.get(col, col))
             ax.set_ylabel('Frequency')
 
         plt.tight_layout()
@@ -100,14 +107,15 @@ class DataAnalysis:
         plt.show()
     
     @staticmethod
-    def plot_correlation_matrix(df, columns, title):
+    def plot_correlation_matrix(df, columns, title, label_dict=None):
         """
         Plots a correlation matrix for specified columns in a DataFrame.
 
         Parameters:
         df (pd.DataFrame): The DataFrame to analyze.
         columns (list): List of columns to include in the correlation matrix.
-        title (string): Title of the plot
+        title (string): Title of the plot.
+        :param label_dict: dictionary with original column names as keys and new titles as values.
         """
         df_filtered = df[columns]
         corr_matrix = df_filtered.corr()
@@ -115,9 +123,17 @@ class DataAnalysis:
         plt.figure(figsize=(10, 10))
         sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm", square=True,
                 annot_kws={"size": 14}, cbar_kws={"shrink": 0.8})
+        
+        if label_dict:
+            ticks = [label_dict.get(column, column) for column in columns]
+        else:
+            ticks = columns
+
         plt.title(f"Correlation Matrix of {title}", fontsize=20, pad=10)
-        plt.xticks(rotation=45, ha='right', fontsize=14)
-        plt.yticks(rotation=0, fontsize=14)
+        plt.xticks(ticks=range(len(ticks)), labels=ticks, rotation=45, ha='right', fontsize=14)
+        plt.yticks(ticks=range(len(ticks)), labels=ticks, rotation=0, fontsize=14)
+        # plt.xticks(rotation=45, ha='right', fontsize=14)
+        # plt.yticks(rotation=0, fontsize=14)
         plt.subplots_adjust(top=0.9)
         plt.tight_layout()
         plt.show()
