@@ -12,7 +12,7 @@ class DataAnalysis:
         sum_missing_values = df.isnull().sum()
         total_missing_values = sum_missing_values[sum_missing_values > 0]
 
-        if total_missing_values > 0:
+        if len(total_missing_values) > 0:
             plt.figure(figsize=(12, 6))
             total_missing_values.plot(kind='bar')
             plt.title('Columns with Missing Data')
@@ -67,9 +67,15 @@ class DataAnalysis:
         else:
             fig, axes = plt.subplots(1, num_cols, figsize=(10, 5))
         
+        if num_cols == 1:
+            axes = [axes]
+
         for i, col in enumerate(columns):
             row, col_pos = divmod(i, 3)
-            ax = axes[row, col_pos] if num_rows > 1 else axes[col_pos]
+            if num_cols > 1:
+                ax = axes[row, col_pos] if num_rows > 1 else axes[col_pos]
+            else:
+                ax = axes[0]
             
             if df[col].dtype in ['int64', 'float64']:
                 df[col].plot(kind='hist', bins=30, ax=ax, title=label_dict.get(col, col))
