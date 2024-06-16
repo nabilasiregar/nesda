@@ -128,7 +128,7 @@ class DataAnalysis:
         df_filtered = df[columns]
         corr_matrix = df_filtered.corr()
 
-        plt.figure(figsize=(10, 10))
+        plt.figure(figsize=(20, 20))
         sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm", square=True,
                 annot_kws={"size": 14}, cbar_kws={"shrink": 0.8})
         
