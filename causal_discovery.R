@@ -1,111 +1,108 @@
-library(bnlearn)  # For structural learning in Bayesian networks
+library(tpc)
+library(micd)
+library(parallel)
 
-data <- read.csv('data/bnlearn.csv')
+data <- read.csv("data/final_discrete_data.csv")
 
-for(col in names(data)) {
-  data[[col]] <- as.factor(data[[col]])
+# convert categorical data to vectors
+for (col in names(data)) {
+  if (is.character(data[[col]])) {
+    data[[col]] <- as.factor(data[[col]])
+ }
 }
 
-tiers <- list(
-  'Context B' = c('Age', 'Sexe'),
-  'B' = c('aedu', 'asmokstat', 'AIPMETO2', 'aauditsc', 'aIRSsum9', 'abaiscal', 'aids', 'acidep09', 'amet_syn2', 'ams_waist', 'ams_hpt', 'ams_trig2', 'ams_hdl2', 'ams_gluc2', 'atri_med', 'ahdl_med', 'asbp_med', 'adbp_med', 'agluc_med', 'ahsCRP', 'aIL6', 'aApoB', 'aHDL_C', 'aTotFA', 'aSerum_TG', 'aGp', 'aIle'),
-  'Context FU' = c('eage', 'sex'),
-  'FU' = c('eipmeto2', 'eauditsc', 'eIRSsum9', 'ebaiscal', 'eids', 'ecidep09', 'emet_syn2', 'ems_waist', 'ems_hpt', 'ems_trig2', 'ems_hdl2', 'ems_gluc2', 'etri_med', 'ehdl_med', 'esbp_med', 'edbp_med', 'egluc_med', 'eApoB', 'eHDLC', 'eTotFA', 'eSerumTG', 'eGp', 'eIle', 'eHSCRP', 'eIL6')
+tier1 <- c('Age', 'Sexe')
+tier2 <- c('aedu', 'asmokstat', 'AIPMETO2', 'aauditsc', 'aIRSsum9', 'abaiscal', 'aids', 'acidep09', 'amet_syn2', 'ams_waist', 'ams_hpt', 'ams_trig2', 'ams_hdl2', 'ams_gluc2', 'atri_med', 'ahdl_med', 'asbp_med', 'adbp_med', 'agluc_med', 'ahsCRP', 'aIL6', 'aApoB', 'aHDL_C', 'aTotFA', 'aSerum_TG', 'aGp', 'aIle')
+tier3 <- c('eage', 'sex')
+tier4 <- c('eipmeto2', 'eauditsc', 'eIRSsum9', 'ebaiscal', 'eids', 'ecidep09', 'emet_syn2', 'ems_waist', 'ems_hpt', 'ems_trig2', 'ems_hdl2', 'ems_gluc2', 'etri_med', 'ehdl_med', 'esbp_med', 'edbp_med', 'egluc_med', 'eHSCRP', 'eIL6', 'eApoB', 'eHDLC', 'eTotFA', 'eSerumTG', 'eGp', 'eIle')
+
+tiered_variables <- c(tier1, tier2, tier3, tier4)
+data <- data[, tiered_variables]
+
+# Create the tiers vector based on the reordered data
+tiers <- c(rep(1, length(tier1)), rep(2, length(tier2)), rep(3, length(tier3)), rep(4, length(tier4)))
+print(tiers)
+
+# Blacklist
+bl1 <- data.frame(from = c("sex"), to = c("sex"))  # No variables can cause sex
+bl2 <- data.frame(from = c("Sexe"), to = c("Sexe"))  
+bl3 <- data.frame(from = c("Age"), to = c("Age"))  # No variables can cause age
+bl4 <- data.frame(from = c("eage"), to = c("eage")) 
+bl <- rbind(bl1, bl2, bl3, bl4)
+
+# Whitelist
+wl_tier1 <- rbind(
+  data.frame(from = "Age", to = c("aSerum_TG", "aHDL_C", "aApoB")),
+  data.frame(from = "Sexe", to = c("aSerum_TG", "aHDL_C", "aApoB")),
+  data.frame(from = "Sexe", to = c("asmokstat", "acidep09"))
 )
 
-tier_levels <- unlist(lapply(seq_along(tiers), function(i) setNames(rep(i, length(tiers[[i]])), tiers[[i]])))
-
-# Whitelist and blacklist
-whitelist <- data.frame(
-  from = c(
-    "Age", "Age", "Age",
-    "Sexe", "Sexe", "Sexe", "Sexe", "Sexe",
-    "asmokstat", "asmokstat", "asmokstat",
-    "aSerum_TG", "aHDL_C", "aApoB",
-    "ams_waist",
-    "ahsCRP",
-    "aSerum_TG", "aHDL_C", "aApoB",
-    "ams_gluc2",
-    "ams_hpt", "ams_hpt",
-    "acidep09",
-    "aauditsc",
-    "aSerum_TG", "aHDL_C", "aApoB", "aSerum_TG", "aHDL_C", "aApoB", "aIL6", "ahsCRP", "amet_syn2", "ams_waist", "ams_hpt", "ams_gluc2",
-    "atri_med", "ahdl_med", "asbp_med", "adbp_med", "agluc_med",
-    "acidep09",
-    "aauditsc",
-    "asmokstat", "asmokstat", "asmokstat",
-    "ahsCRP",
-    "acidep09",
-    "aedu"
-  ),
-  to = c(
-    "aSerum_TG", "aHDL_C", "aApoB",
-    "aSerum_TG", "aHDL_C", "aApoB", "asmokstat", "acidep09",
-    "aSerum_TG", "aHDL_C", "aApoB",
-    "amet_syn2", "amet_syn2", "amet_syn2",
-    "amet_syn2",
-    "aIL6",
-    "atri_med", "ahdl_med", "atri_med",
-    "agluc_med",
-    "asbp_med", "adbp_med",
-    "aedu",
-    "asmokstat",
-    "eSerumTG", "eHDLC", "eApoB", "eSerumTG", "eHDLC", "eApoB", "eIL6", "eHSCRP", "emet_syn2", "ems_waist", "ems_hpt", "ems_gluc2",
-    "etri_med", "ehdl_med", "esbp_med", "edbp_med", "egluc_med",
-    "ecidep09",
-    "eauditsc",
-    "eSerumTG", "eHDLC", "eApoB",
-    "eIL6",
-    "emet_syn2",
-    "eauditsc"
-  )
+wl_tier2 <- rbind(
+  data.frame(from = "asmokstat", to = c("aSerum_TG", "aHDL_C", "aApoB")),
+  expand.grid(from = c("aSerum_TG", "aHDL_C", "aApoB"), to = c("atri_med", "ahdl_med")),
+  data.frame(from = "ams_gluc2", to = c("agluc_med")),
+  data.frame(from = "ams_hpt", to = c("asbp_med", "adbp_med")),
+  data.frame(from = "acidep09", to = c("aedu")),
+  data.frame(from = "aauditsc", to = c("asmokstat")),
+  expand.grid(from = c("aSerum_TG", "aHDL_C", "aApoB"), to = c("eSerumTG", "eHDLC", "eApoB")),
+  expand.grid(from = c("aIL6", "ahsCRP"), to = c("eIL6", "eHSCRP")),
+  data.frame(from = c("amet_syn2"), to = c("emet_syn2")),
+  data.frame(from = c("ams_waist"), to = c("ems_waist")),
+  data.frame(from = c("ams_hpt"), to = c("ems_hpt")),
+  data.frame(from = c("ams_gluc2"), to = c("ems_gluc2")),
+  expand.grid(from = c("atri_med", "ahdl_med", "asbp_med", "adbp_med", "agluc_med"), to = c("etri_med", "ehdl_med", "esbp_med", "edbp_med", "egluc_med")),
+  data.frame(from = "acidep09", to = c("ecidep09")),
+  data.frame(from = "aauditsc", to = c("eauditsc")),
+  data.frame(from = "asmokstat", to = c("eSerumTG", "eHDLC", "eApoB")),
+  data.frame(from = c("ahsCRP"), to = c("eIL6")),
+  data.frame(from = "acidep09", to = c("emet_syn2")),
+  data.frame(from = "aedu", to = c("eauditsc"))
 )
 
-# Ensure it's converted to a matrix for bnlearn usage
-whitelist_matrix <- as.matrix(whitelist)
+wl <- rbind(wl_tier1, wl_tier2)
+context_tier1 <- unique(wl_tier1$from)
+context_tier2 <- unique(wl_tier2$from)
 
-tier_levels <- c(
-  'Age' = 1, 'Sexe' = 1,
-  'aedu' = 2, 'asmokstat' = 2, 'AIPMETO2' = 2, 'aauditsc' = 2, 'aIRSsum9' = 2, 'abaiscal' = 2, 'aids' = 2, 'acidep09' = 2, 
-  'ams_waist' = 2, 'ams_hpt' = 2, 'ams_trig2' = 2, 'ams_hdl2' = 2, 'ams_gluc2' = 2, 'atri_med' = 2, 'ahdl_med' = 2, 
-  'asbp_med' = 2, 'adbp_med' = 2, 'agluc_med' = 2, 'ahsCRP' = 2, 'aIL6' = 2, 'aApoB' = 2, 'aHDL_C' = 2, 'aTotFA' = 2, 
-  'aSerum_TG' = 2, 'aGp' = 2, 'aIle' = 2, 'amet_syn2' = 2,
-  'eage' = 3, 'sex' = 3,
-  'eipmeto2' = 4, 'eauditsc' = 4, 'eIRSsum9' = 4, 'ebaiscal' = 4, 'eids' = 4, 'ecidep09' = 4, 'ems_waist' = 4, 'ems_hpt' = 4, 
-  'ems_trig2' = 4, 'ems_hdl2' = 4, 'ems_gluc2' = 4, 'etri_med' = 4, 'ehdl_med' = 4, 'esbp_med' = 4, 'edbp_med' = 4, 'egluc_med' = 4, 
-  'eApoB' = 4, 'eHDLC' = 4, 'eTotFA' = 4, 'eSerumTG' = 4, 'eGp' = 4, 'eIle' = 4, 'eHSCRP' = 4, 'eIL6' = 4, 'emet_syn2' = 4
-)
+# Create context.tier vector
+context_tier <- rep(NA, ncol(data))
+context_tier[1:length(tier1)] <- ifelse(tier1 %in% context_tier1, tier1, NA)
+context_tier[(length(tier1) + 1):(length(tier1) + length(tier2))] <- ifelse(tier2 %in% context_tier2, tier2, NA)
 
-blacklist <- list()
+# Ensure context_tier only includes valid variable names
+context_tier <- context_tier[context_tier %in% colnames(data)]
+context_tier <- as.character(context_tier)
+print(context_tier)
 
-# Populate the blacklist enforcing tier constraints
-for (var in names(tier_levels)) {
-  for (ivar in names(tier_levels)) {
-    if (tier_levels[var] < tier_levels[ivar]) {  # Allow only edges that go from lower to higher tier
-      potential_pair <- c(var, ivar)
-      if (length(potential_pair) == 2) {  # Check if it is indeed a pair
-        blacklist[[length(blacklist) + 1]] <- potential_pair
-      } else {
-        cat("Invalid pair detected:", potential_pair, "\n")  # Log the invalid pair
-      }
-    }
+# Prepare forbidden edges
+forbEdges <- matrix(0, ncol = length(colnames(data)), nrow = length(colnames(data)), 
+                    dimnames = list(colnames(data), colnames(data)))
+
+for (i in 1:nrow(bl)) {
+  if (bl$from[i] %in% colnames(data) && bl$to[i] %in% colnames(data)) {
+    forbEdges[bl$from[i], bl$to[i]] <- 1
   }
 }
 
-valid_pairs <- sapply(blacklist, function(x) length(x) == 2)
+suff.all <- getSuff(data, test = "flexMItest")
+print(str(suff.all))
+print(as.character(colnames(suff.all$datlist)))
+print(dim(suff.all$datlist))
+print(suff.all$datlist)
+print(sapply(suff.all$datlist, class))
 
-# Identify and print any invalid pairs
-if (any(!valid_pairs)) {
-  cat("Invalid pairs:\n")
-  print(blacklist[!valid_pairs])
-  stop("Not all elements in the blacklist are pairs.")
-} else {
-  blacklist_matrix <- do.call(rbind, blacklist)
-  print("All pairs are valid, and blacklist_matrix has been created successfully.")
-}
+graph <- tpc(
+  suffStat = suff.all$datlist,
+  indepTest = flexMItest,
+  skel.method = "stable.parallel",
+  labels = as.character(colnames(suff.all$datlist)),
+  alpha = 0.05,
+  tiers = tiers,
+  forbEdges = forbEdges,
+  numCores = detectCores()-1,
+  verbose = FALSE,
+  context.tier = context_tier
+)
 
-valid_whitelist <- all(whitelist_matrix %in% colnames(data))
-print(paste("Whitelist valid:", valid_whitelist))
 
-pc_result <- pc.stable(data, blacklist = blacklist_matrix, whitelist = whitelist_matrix, test = "mi")
-
+print(graph)
+save(graph, file = "causal_graph.RData")
