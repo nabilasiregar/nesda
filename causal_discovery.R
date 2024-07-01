@@ -25,10 +25,8 @@ print(tiers)
 
 # Blacklist
 bl1 <- data.frame(from = c("sex"), to = c("sex"))  # No variables can cause sex
-bl2 <- data.frame(from = c("Sexe"), to = c("Sexe"))  
-bl3 <- data.frame(from = c("Age"), to = c("Age"))  # No variables can cause age
-bl4 <- data.frame(from = c("eage"), to = c("eage")) 
-bl <- rbind(bl1, bl2, bl3, bl4)
+bl2 <- data.frame(from = c("eage"), to = c("eage")) 
+bl <- rbind(bl1, bl2)
 
 # Whitelist
 wl_tier1 <- rbind(
@@ -82,6 +80,7 @@ for (i in 1:nrow(bl)) {
     forbEdges[bl$from[i], bl$to[i]] <- 1
   }
 }
+print(forbEdges)
 
 suff.all <- getSuff(data, test = "flexMItest")
 print(str(suff.all))
@@ -105,4 +104,4 @@ graph <- tpc(
 
 
 print(graph)
-save(graph, file = "causal_graph.RData")
+save(graph, file = "causal_graph_test.RData")
