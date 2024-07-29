@@ -285,8 +285,9 @@ class DataAnalysis:
         plt.show()
     
     @staticmethod
-    def generate_descriptive_statistics(file_path, column_names, output_file):
-        df = pd.read_csv(file_path)
+    def generate_continuous_statistics(df, column_names, output_file):
+        # Replace negative values (-1, -3) with NaN
+        df[column_names] = df[column_names].replace([-1, -3], np.nan)
         
         missing_columns = [column for column in column_names if column not in df.columns]
         if missing_columns:
@@ -294,19 +295,32 @@ class DataAnalysis:
         
         with open(output_file, 'w') as file:
             for column in column_names:
-                data = df[column]
+                data = df[column].dropna()  # Drop NaN values
                 statistics = {
-                    'Mean': data.mean(),
-                    'Median': data.median(),
-                    'Mode': data.mode().iloc[0] if not data.mode().empty else None,
-                    'Standard Deviation': data.std(),
-                    'Variance': data.var(),
-                    'Range': data.max() - data.min(),
-                    'Skewness': data.skew(),
-                    'Kurtosis': data.kurt()
+                    'N': data.count(),
+                    'Mean': round(data.mean(), 2),
+                    'Standard Deviation': round(data.std(), 2)
                 }
                 
                 file.write(f"\nDescriptive Statistics for '{column}':\n")
                 for stat, value in statistics.items():
                     file.write(f"{stat}: {value}\n")
-                    
+
+    @staticmethod
+    def generate_categorical_statistics(df, column_names, output_file):
+        missing_columns = [column for column in column_names if column not in df.columns]
+        if missing_columns:
+            raise ValueError(f"Columns not found in the dataset: {', '.join(missing_columns)}")
+        
+        with open(output_file, 'w') as file:
+            for column in column_names:
+                data = df[column]
+                counts = data.value_counts()
+                total = data.count()
+                frequencies = counts / total
+                
+                file.write(f"\nFrequency Distribution for '{column}':\n")
+                file.write(f"Total: {total}\n")
+                for category, count in counts.items():
+                    frequency = frequencies[category]
+                    file.write(f"{category}: Count = {count}, Frequency = {frequency:.2f}\n")
