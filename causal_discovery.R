@@ -34,15 +34,15 @@ wl_tier2 <- rbind(
   expand.grid(from = "ams_hpt", to = c("asbp_med", "adbp_med")),
   data.frame(from = "acidep09", to = c("aedu")),
   data.frame(from = "aauditsc", to = c("asmokstat")),
-  #expand.grid(from = c("aSerum_TG", "aHDL_C", "aApoB"), to = c("eSerumTG", "eHDLC", "eApoB")),
-  #expand.grid(from = c("aIL6", "ahsCRP"), to = c("eIL6", "eHSCRP")),
-  #data.frame(from = c("amet_syn2"), to = c("emet_syn2")),
-  #data.frame(from = c("ams_waist"), to = c("ems_waist")),
-  #data.frame(from = c("ams_hpt"), to = c("ems_hpt")),
-  #data.frame(from = c("ams_gluc2"), to = c("ems_gluc2")),
-  #expand.grid(from = c("atri_med", "ahdl_med", "asbp_med", "adbp_med", "agluc_med"), to = c("etri_med", "ehdl_med", "esbp_med", "edbp_med", "egluc_med")),
-  #data.frame(from = "acidep09", to = c("ecidep09")),
-  #data.frame(from = "aauditsc", to = c("eauditsc")),
+  expand.grid(from = c("aSerum_TG", "aHDL_C", "aApoB"), to = c("eSerumTG", "eHDLC", "eApoB")),
+  expand.grid(from = c("aIL6", "ahsCRP"), to = c("eIL6", "eHSCRP")),
+  data.frame(from = c("amet_syn2"), to = c("emet_syn2")),
+  data.frame(from = c("ams_waist"), to = c("ems_waist")),
+  data.frame(from = c("ams_hpt"), to = c("ems_hpt")),
+  data.frame(from = c("ams_gluc2"), to = c("ems_gluc2")),
+  expand.grid(from = c("atri_med", "ahdl_med", "asbp_med", "adbp_med", "agluc_med"), to = c("etri_med", "ehdl_med", "esbp_med", "edbp_med", "egluc_med")),
+  data.frame(from = "acidep09", to = c("ecidep09")),
+  data.frame(from = "aauditsc", to = c("eauditsc")),
   expand.grid(from = "asmokstat", to = c("eSerumTG", "eHDLC", "eApoB")),
   expand.grid(from = c("ahsCRP"), to = c("eIL6")),
   data.frame(from = "acidep09", to = c("emet_syn2")),
@@ -86,8 +86,7 @@ graph <- tpc(
   tiers = tiers,
   forbEdges = forbEdges,
   numCores = detectCores()-1,
-  verbose = FALSE,
-  context.tier = context_tier
+  verbose = FALSE
 )
 
-save(graph, file = "causal_graph_0.05_with_whitelist.RData")
+save(graph, file = "causal_graph_0.05_without_whitelist.RData")

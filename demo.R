@@ -4,11 +4,13 @@ library(igraph)
 library(htmlwidgets)
 
 
-load("causal_graph_0.05_with_whitelist.RData")
-adj_matrix <- as(graph@graph, "matrix")
-g <- graph_from_adjacency_matrix(adj_matrix, mode = "directed")
+load("hc_graph.RData")
+g <- as.igraph(hc_network)
 nodes <- data.frame(id = V(g)$name, label = V(g)$name)
-print(graph)
+edges <- get.data.frame(g, what = "edges")
+print(pc_network)
+#tier1 <- c('Age', 'Sexe', 'aedu', 'asmokstat', 'AIPMETO2', 'aauditsc', 'aIRSsum9', 'abaiscal', 'aids', 'acidep09', 'amet_syn2', 'ams_waist', 'ams_hpt', 'ams_trig2', 'ams_hdl2', 'ams_gluc2', 'atri_med', 'ahdl_med', 'asbp_med', 'adbp_med', 'agluc_med', 'ahsCRP', 'aIL6', 'aApoB', 'aHDL_C', 'aTotFA', 'aSerum_TG', 'aGp', 'aIle')
+#tier2 <- c('eage', 'sex', 'eipmeto2', 'eauditsc', 'eIRSsum9', 'ebaiscal', 'eids', 'ecidep09', 'emet_syn2', 'ems_waist', 'ems_hpt', 'ems_trig2', 'ems_hdl2', 'ems_gluc2', 'etri_med', 'ehdl_med', 'esbp_med', 'edbp_med', 'egluc_med', 'eHSCRP', 'eIL6', 'eApoB', 'eHDLC', 'eTotFA', 'eSerumTG', 'eGp', 'eIle')
 tier1 <- c('Age', 'Sexe')
 tier2 <- c('aedu', 'asmokstat', 'AIPMETO2', 'aauditsc', 'aIRSsum9', 'abaiscal', 'aids', 'acidep09', 'amet_syn2', 'ams_waist', 'ams_hpt', 'ams_trig2', 'ams_hdl2', 'ams_gluc2', 'atri_med', 'ahdl_med', 'asbp_med', 'adbp_med', 'agluc_med', 'ahsCRP', 'aIL6', 'aApoB', 'aHDL_C', 'aTotFA', 'aSerum_TG', 'aGp', 'aIle')
 tier3 <- c('eage', 'sex')
@@ -60,6 +62,7 @@ follow_up_variables <- c('eage', 'sex', 'eipmeto2', 'eauditsc', 'eIRSsum9', 'eba
                          'ems_gluc2', 'etri_med', 'ehdl_med', 'esbp_med', 'edbp_med', 'egluc_med', 
                          'eHSCRP', 'eIL6', 'eApoB', 'eHDLC', 'eTotFA', 'eSerumTG', 'eGp', 'eIle')
 
+
 # Assign shapes based on baseline or follow-up
 nodes$shape <- ifelse(nodes$id %in% baseline_variables, 'square', 'dot')
 
@@ -92,34 +95,14 @@ nodes$color <- sapply(nodes$label, function(x) {
   }
 })
 
-assign_positions <- function(nodes, max_nodes_per_row = 8, row_height = 150) {
-  positions <- data.frame(id = nodes$id, x = NA, y = NA, stringsAsFactors = FALSE)
-  current_y <- 0
-  total_nodes <- nrow(nodes)
-  
-  for (i in 1:ceiling(total_nodes / max_nodes_per_row)) {
-    row_nodes <- nodes$id[((i - 1) * max_nodes_per_row + 1):min(i * max_nodes_per_row, total_nodes)]
-    num_nodes <- length(row_nodes)
-    
-    x_start <- -(num_nodes - 1) * 75
-    
-    for (j in 1:num_nodes) {
-      node_id <- row_nodes[j]
-      positions[positions$id == node_id, "x"] <- x_start + (j - 1) * 150
-      positions[positions$id == node_id, "y"] <- current_y
-    }
-    
-    current_y <- current_y + row_height
-  }
-  
-  return(positions)
-}
-positions <- assign_positions(nodes)
+# Nodes position
+all_nodes <- c(tier1, tier2, tier3, tier4)
+nodes <- nodes[nodes$id %in% all_nodes,]
+nodes <- nodes[order(match(nodes$id, all_nodes)),]
 
-nodes <- merge(nodes, positions, by = "id")
-edges <- data.frame(from = as.character(as_edgelist(g)[, 1]),
-                    to = as.character(as_edgelist(g)[, 2]))
-print(graph)
+# Maximum 8 nodes per row
+nodes$y <- (seq_along(nodes$id) - 1) %/% 8 * 150 + 100
+nodes$x <- (seq_along(nodes$id) - 1) %% 8 * 150
 
 # Define legend for shapes and colors
 legend_nodes <- data.frame(
@@ -137,5 +120,5 @@ net <- visNetwork(nodes, edges) %>%
   visNodes(fixed = TRUE) %>%
   visLegend(addNodes = legend_nodes, useGroups = FALSE)
 
-saveWidget(net, file = "network.html", selfcontained = TRUE)
+saveWidget(net, file = "hc_network.html", selfcontained = TRUE)
 net
