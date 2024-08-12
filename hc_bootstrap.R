@@ -1,6 +1,6 @@
 library(bnlearn)
 
-data <- read.csv("data/discrete_data.csv")
+data <- read.csv("data/discrete_mice.csv")
 discrete_vars <- c('Age', 'Sexe', 'aedu', 'asmokstat', 'AIPMETO2', 'aauditsc', 'aIRSsum9', 'abaiscal',
                    'aids', 'acidep09', 'amet_syn2', 'ams_waist', 'ams_hpt', 'ams_trig2', 'ams_hdl2',
                    'ams_gluc2', 'atri_med', 'ahdl_med', 'asbp_med', 'adbp_med', 'agluc_med', 'ahsCRP',
@@ -11,9 +11,17 @@ discrete_vars <- c('Age', 'Sexe', 'aedu', 'asmokstat', 'AIPMETO2', 'aauditsc', '
                    'eSerumTG', 'eGp', 'eIle')
 data[discrete_vars] <- lapply(data[discrete_vars], factor)
 
+tiers <- list(
+  tier1 = c('Age', 'Sexe'),
+  tier2 = c('aedu', 'asmokstat', 'AIPMETO2', 'aauditsc', 'aIRSsum9', 'abaiscal', 'aids', 'acidep09', 'amet_syn2', 'ams_waist', 'ams_hpt', 'ams_trig2', 'ams_hdl2', 'ams_gluc2', 'atri_med', 'ahdl_med', 'asbp_med', 'adbp_med', 'agluc_med', 'ahsCRP', 'aIL6', 'aApoB', 'aHDL_C', 'aTotFA', 'aSerum_TG', 'aGp', 'aIle'),
+  tier3 = c('eage', 'sex'),
+  tier4 = c('eipmeto2', 'eauditsc', 'eIRSsum9', 'ebaiscal', 'eids', 'ecidep09', 'emet_syn2', 'ems_waist', 'ems_hpt', 'ems_trig2', 'ems_hdl2', 'ems_gluc2', 'etri_med', 'ehdl_med', 'esbp_med', 'edbp_med', 'egluc_med', 'eHSCRP', 'eIL6', 'eApoB', 'eHDLC', 'eTotFA', 'eSerumTG', 'eGp', 'eIle')
+)
+
 blacklist <- rbind(
   expand.grid(from = setdiff(discrete_vars, c("Age", "Sexe", "eage", "sex")), to = c("Age", "Sexe", "eage", "sex")),
-  tiers2blacklist(tiers)
+  tiers2blacklist(tiers),
+  data.frame(from = c("Age", "Sexe"), to = c("eage", "sex"))
 )
 
 whitelist <- rbind(
