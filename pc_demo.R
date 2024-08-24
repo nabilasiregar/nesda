@@ -19,32 +19,32 @@ renamed_labels <- list(
   'Age' = 'Age', 'eage' = 'Age',
   'Sexe' = 'Gender', 'sex' = 'Gender',
   'aedu' = 'Education',
-  'asmokstat' = 'Smoking status',
-  'aauditsc' = 'Alcohol consumption', 'eauditsc' = 'Alcohol consumption',
-  'AIPMETO2' = 'Physical activity', 'eipmeto2' = 'Physical activity',
-  'aIRSsum9' = 'Sleep pattern', 'eIRSsum9' = 'Sleep pattern',
-  'acidep09' = 'Major depression', 'ecidep09' = 'Major depression',
+  'asmokstat' = 'Smoking Status',
+  'aauditsc' = 'Alcohol Consumption', 'eauditsc' = 'Alcohol Consumption',
+  'AIPMETO2' = 'Physical Activity', 'eipmeto2' = 'PhysicalAactivity',
+  'aIRSsum9' = 'Sleep Pattern', 'eIRSsum9' = 'Sleep Pattern',
+  'acidep09' = 'Major Depression', 'ecidep09' = 'Major Depression',
   'amet_syn2' = 'MetS', 'emet_syn2' = 'MetS',
   'ams_waist' = 'Obesity', 'ems_waist' = 'Obesity',
   'ams_hpt' = 'Hypertension', 'ems_hpt' = 'Hypertension',
   'ams_trig2' = 'Hypertriglyceridemia', 'ems_trig2' = 'Hypertriglyceridemia',
-  'ams_hdl2' = 'Low HDL cholesterol', 'ems_hdl2' = 'Low HDL cholesterol',
+  'ams_hdl2' = 'Low HDL Cholesterol', 'ems_hdl2' = 'Low HDL Cholesterol',
   'ams_gluc2' = 'Hyperglycemia', 'ems_gluc2' = 'Hyperglycemia',
-  'atri_med' = 'TG', 'etri_med' = 'TG',
-  'ahdl_med' = 'HDL', 'ehdl_med' = 'HDL',
+  'atri_med' = 'Triglycerides', 'etri_med' = 'Triglycerides',
+  'ahdl_med' = 'HDL Cholesterol', 'ehdl_med' = 'HDL Cholesterol',
   'asbp_med' = 'Systolic BP', 'esbp_med' = 'Systolic BP',
   'adbp_med' = 'Diastolic BP', 'edbp_med' = 'Diastolic BP',
   'agluc_med' = 'Glucose', 'egluc_med' = 'Glucose',
   'ahsCRP' = 'hs-CRP', 'eHSCRP' = 'hs-CRP',
   'aIL6' = 'IL-6', 'eIL6' = 'IL-6',
   'aApoB' = 'ApoB', 'eApoB' = 'ApoB',
-  'aHDL_C' = 'HDLC', 'eHDLC' = 'HDLC',
-  'aTotFA' = 'Total FA', 'eTotFA' = 'Total FA',
-  'aSerum_TG' = 'Serum TG', 'eSerumTG' = 'Serum TG',
-  'aGp' = 'AGP', 'eGp' = 'AGP',
-  'aIle' = 'Ile', 'eIle' = 'Ile',
+  'aHDL_C' = 'Total Cholesterol in HDL', 'eHDLC' = 'Total Cholesterol in HDL',
+  'aTotFA' = 'Total Fatty Acids', 'eTotFA' = 'Total Fatty Acids',
+  'aSerum_TG' = 'Serum Total Triglycerides', 'eSerumTG' = 'Serum Total Triglycerides',
+  'aGp' = 'Glycoprotein acetyls', 'eGp' = 'Glycoprotein acetyls',
+  'aIle' = 'Isoleucine', 'eIle' = 'Isoleucine',
   'abaiscal' = 'Anxiety', 'ebaiscal' = 'Anxiety',
-  'aids' = 'Depression severity', 'eids' = 'Depression severity'
+  'aids' = 'Depression Severity', 'eids' = 'Depression Severity'
 )
 
 # Rename node labels
@@ -119,5 +119,5 @@ net <- visNetwork(nodes, edges) %>%
   visNodes(fixed = TRUE) %>%
   visLegend(addNodes = legend_nodes, useGroups = FALSE)
 
-saveWidget(net, file = "pc_network.html", selfcontained = TRUE)
+#saveWidget(net, file = "pc_network.html", selfcontained = TRUE)
 net
