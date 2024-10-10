@@ -33,8 +33,8 @@ stable_edges <- original_edges[edge_presence > 0.99, , drop = FALSE]
 print("Edges found in more than 80% of bootstrap graphs:")
 print(stable_edges)
 
-node_a <- "aHDL_C" 
-node_b <- "emet_syn2"
+node_a <- "acidep09" 
+node_b <- "egluc_med"
 
 original_igraph <- as.igraph(original_graph)
 

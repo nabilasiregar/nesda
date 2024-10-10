@@ -46,8 +46,8 @@ stable_edges <- original_edges[edge_presence > 0.8, , drop = FALSE]
 print("Edges found in more than 80% of bootstrap graphs:")
 print(stable_edges)
 
-node_a <- "aHDL_C" 
-node_b <- "emet_syn2"
+node_a <- "acidep09" 
+node_b <- "egluc_med"
 
 find_shortest_path <- function(graph, from, to) {
   if (from %in% V(graph)$name && to %in% V(graph)$name) {
@@ -88,44 +88,35 @@ extract_all_paths <- function(graph, from, to) {
     return(list())
   }
 }
+
 all_paths_original <- extract_all_paths(original_igraph, node_a, node_b)
 num_paths_original <- length(all_paths_original)
 print(glue("Number of unique paths from {node_a} to {node_b} in the original graph: {num_paths_original}"))
-
 
 # 3. How many times the shortest path in the original graph was also found in the bootstrap graphs
 if (!is.null(shortest_paths_original) && length(shortest_paths_original) > 0) {
   shortest_path_counts <- numeric(length(shortest_paths_original))
   
-  # Iterate through each shortest path in the original graph
-  for (i in seq_along(shortest_paths_original)) {
-    shortest_path_original_str <- paste(shortest_paths_original[[i]], collapse = " -> ")
-    
-    # Check how many times this specific shortest path appears in the bootstrap graphs
-    shortest_paths <- lapply(all_graphs, function(g) {
-      g_igraph <- convert_to_igraph(g)
-      find_shortest_path(g_igraph, node_a, node_b)
-    })
-    
-    # Filter out NULL results
-    shortest_paths <- Filter(Negate(is.null), shortest_paths)
-    
-    if (length(shortest_paths) > 0) {
-      shortest_path_strings <- unlist(lapply(shortest_paths, function(paths) {
-        sapply(paths, function(path) paste(path, collapse = " -> "))
-      }))
-      shortest_path_count_in_bootstrap <- sum(shortest_path_strings == shortest_path_original_str)
-      shortest_path_counts[i] <- shortest_path_count_in_bootstrap
-    } else {
-      shortest_path_counts[i] <- 0
-    }
-  }
+  # Convert the shortest path from the original graph to string format
+  shortest_path_original_str <- paste(shortest_paths_original[[1]], collapse = " -> ")
   
-  # Print the results for each shortest path
-  for (i in seq_along(shortest_paths_original)) {
-    path_str <- paste(shortest_paths_original[[i]], collapse = " -> ")
-    cat(glue("Number of times the shortest path {i} ({path_str}) in the original graph was found in bootstrap graphs: {shortest_path_counts[i]}\n"))
-  }
+  # Iterate over all bootstrap graphs to count how many times this shortest path appears
+  all_paths <- lapply(all_graphs, function(g) {
+    g_igraph <- convert_to_igraph(g)
+    extract_all_paths(g_igraph, node_a, node_b) 
+  })
+  
+  # Combine all paths from all bootstrap graphs into a single list
+  all_paths <- do.call(c, all_paths)
+  
+  # Convert all bootstrap paths to string format
+  all_path_strings <- sapply(all_paths, function(path) paste(path, collapse = " -> "))
+  
+  # Count how many times the shortest path from the original graph appears in the bootstrap graphs
+  shortest_path_count_in_bootstrap <- sum(all_path_strings == shortest_path_original_str)
+  
+  cat(glue("The shortest path from the original graph ({shortest_path_original_str}) appears {shortest_path_count_in_bootstrap} times in the bootstrap graphs.\n"))
+  
 } else {
   print(glue("No path exists between {node_a} and {node_b} in the original graph. Skipping bootstrap analysis for shortest path."))
 }
@@ -135,21 +126,28 @@ all_paths <- lapply(all_graphs, function(g) {
   g_igraph <- convert_to_igraph(g)
   extract_all_paths(g_igraph, node_a, node_b)
 })
+
 all_paths <- do.call(c, all_paths)
 
 if (length(all_paths) == 0) {
   print(glue("No paths found from {node_a} to {node_b} across all bootstrap graphs."))
 } else {
-  all_path_strings <- sapply(all_paths, paste, collapse = " -> ")
+  # Convert each path to a string representation
+  all_path_strings <- sapply(all_paths, function(path) paste(path, collapse = " -> "))
+  
+  # Create a frequency table for the path strings
   path_table <- table(all_path_strings)
+  
+  # Get the maximum frequency
   max_frequency <- max(path_table)
+  
+  # Get the most frequent path(s) based on the maximum frequency
   most_frequent_paths <- names(path_table[path_table == max_frequency])
   
   print("Most frequent path(s) across all paths:")
   print(most_frequent_paths)
   cat(sprintf("Number of times the most frequent path(s) appear(s): %d\n", max_frequency))
 }
-
 
 # 5. The 3 most frequent visited intermediate nodes across bootstrap graphs and their percentages
 all_paths <- lapply(all_graphs, function(g) {

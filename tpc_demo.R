@@ -8,10 +8,11 @@ load("tpc_graph.RData")
 adj_matrix <- as(graph@graph, "matrix")
 g <- graph_from_adjacency_matrix(adj_matrix, mode = "directed")
 nodes <- data.frame(id = V(g)$name, label = V(g)$name)
+nodes <- nodes[!nodes$id %in% c('sex'), ]
 print(graph)
 tier1 <- c('Age', 'Sexe')
 tier2 <- c('aedu', 'asmokstat', 'AIPMETO2', 'aauditsc', 'aIRSsum9', 'abaiscal', 'aids', 'acidep09', 'amet_syn2', 'ams_waist', 'ams_hpt', 'ams_trig2', 'ams_hdl2', 'ams_gluc2', 'atri_med', 'ahdl_med', 'asbp_med', 'adbp_med', 'agluc_med', 'ahsCRP', 'aIL6', 'aApoB', 'aHDL_C', 'aTotFA', 'aSerum_TG', 'aGp', 'aIle')
-tier3 <- c('eage', 'sex')
+tier3 <- c('eage')
 tier4 <- c('eipmeto2', 'eauditsc', 'eIRSsum9', 'ebaiscal', 'eids', 'ecidep09', 'emet_syn2', 'ems_waist', 'ems_hpt', 'ems_trig2', 'ems_hdl2', 'ems_gluc2', 'etri_med', 'ehdl_med', 'esbp_med', 'edbp_med', 'egluc_med', 'eHSCRP', 'eIL6', 'eApoB', 'eHDLC', 'eTotFA', 'eSerumTG', 'eGp', 'eIle')
 
 renamed_labels <- list(
@@ -22,15 +23,15 @@ renamed_labels <- list(
   'aauditsc' = 'Alcohol consumption', 'eauditsc' = 'Alcohol consumption',
   'AIPMETO2' = 'Physical activity', 'eipmeto2' = 'Physical activity',
   'aIRSsum9' = 'Sleep pattern', 'eIRSsum9' = 'Sleep pattern',
-  'acidep09' = 'Major depression', 'ecidep09' = 'Major depression',
+  'acidep09' = 'MDD', 'ecidep09' = 'MDD',
   'amet_syn2' = 'MetS', 'emet_syn2' = 'MetS',
   'ams_waist' = 'Obesity', 'ems_waist' = 'Obesity',
   'ams_hpt' = 'Hypertension', 'ems_hpt' = 'Hypertension',
   'ams_trig2' = 'Hypertriglyceridemia', 'ems_trig2' = 'Hypertriglyceridemia',
   'ams_hdl2' = 'Low HDL cholesterol', 'ems_hdl2' = 'Low HDL cholesterol',
   'ams_gluc2' = 'Hyperglycemia', 'ems_gluc2' = 'Hyperglycemia',
-  'atri_med' = 'TG', 'etri_med' = 'TG',
-  'ahdl_med' = 'HDL', 'ehdl_med' = 'HDL',
+  'atri_med' = 'Triglycerides', 'etri_med' = 'Triglycerides',
+  'ahdl_med' = 'HDL cholesterol', 'ehdl_med' = 'HDL cholesterol',
   'asbp_med' = 'Systolic BP', 'esbp_med' = 'Systolic BP',
   'adbp_med' = 'Diastolic BP', 'edbp_med' = 'Diastolic BP',
   'agluc_med' = 'Glucose', 'egluc_med' = 'Glucose',
@@ -43,11 +44,16 @@ renamed_labels <- list(
   'aGp' = 'AGP', 'eGp' = 'AGP',
   'aIle' = 'Ile', 'eIle' = 'Ile',
   'abaiscal' = 'Anxiety', 'ebaiscal' = 'Anxiety',
-  'aids' = 'Depression severity', 'eids' = 'Depression severity'
+  'aids' = 'MDD severity', 'eids' = 'MDD severity'
 )
 
 # Rename node labels
 nodes$label <- sapply(nodes$label, function(x) renamed_labels[[x]])
+
+# Remove age and gender from follow up
+edges <- data.frame(from = as.character(as_edgelist(g)[, 1]),
+                    to = as.character(as_edgelist(g)[, 2]))
+edges <- edges[!edges$from %in% c('sex') & !edges$to %in% c('sex'), ]
 
 # Assign node shapes
 baseline_variables <- c('Age', 'Sexe', 'aedu', 'asmokstat', 'AIPMETO2', 'aauditsc', 'aIRSsum9', 'aids', 
@@ -67,16 +73,16 @@ nodes$shape <- ifelse(nodes$id %in% baseline_variables, 'square', 'dot')
 color_map <- list(
   'Background variables' = '#ADD7F6',
   'Conditional variables' = '#2667FF',
-  'Metabolites' = '#90EE90',
   'Intermediate variables' = '#ffb703',
-  'Diagnostic variables' = '#FF6347'
+  'Diagnostic variables' = '#FF6347',
+  'Biomarkers' = '#90EE90'
 )
 
 variable_groups <- list(
   'Background variables' = c('Age', 'Gender'),
-  'Metabolites' = c('ApoB', 'Total FA', 'Serum TG', 'AGP', 'Ile', 'HDLC'),
-  'Diagnostic variables' = c('Major depression', 'MetS'),
-  'Conditional variables' = c('Smoking status', 'Physical activity', 'Education', 'Alcohol consumption', 'Sleep pattern', 'Anxiety', 'Depression severity')
+  'Biomarkers' = c('IL-6', 'hs-CRP', 'ApoB', 'Total FA', 'Serum TG', 'AGP', 'Ile', 'HDLC'),
+  'Diagnostic variables' = c('MDD', 'MetS'),
+  'Conditional variables' = c('Smoking status', 'Physical activity', 'Education', 'Alcohol consumption')
 )
 
 all_variables <- unique(unlist(renamed_labels))
