@@ -244,20 +244,13 @@ class DataAnalysis:
         if missing_columns:
             raise ValueError(f"Columns not found in the dataset: {', '.join(missing_columns)}")
         
-        num_cols = 3
-        num_rows = (len(column_names) + num_cols - 1) // num_cols
-        fig, axes = plt.subplots(num_rows, num_cols, figsize=(15, num_rows * 5))
-        
-        for ax, column, label in zip(axes.flatten(), column_names, column_labels):
-            sns.kdeplot(df[column].dropna(), ax=ax, bw_adjust=0.5)
-            ax.set_xlabel(label)
-            ax.set_ylabel('Density')
-        
-        for i in range(len(column_names), num_rows * num_cols):
-            fig.delaxes(axes.flatten()[i])
-        
-        plt.tight_layout()
-        output_file = f"{output_folder}/density_plots.png"
-        plt.savefig(output_file)
-        plt.close()
+        for column, label in zip(column_names, column_labels):
+            plt.figure(figsize=(6, 4))
+            sns.kdeplot(df[column].dropna(), bw_adjust=0.5)
+            plt.xlabel(label)
+            plt.ylabel('Density')
+            
+            output_file = f"{output_folder}/{label}_density_plots.png"
+            plt.savefig(output_file)
+            plt.close()
         
